@@ -18,7 +18,7 @@ A microservices-based POS system for a pizza restaurant chain using Java Spring 
 
 ##  Docs
 
-- [System Architecture](docs/architecture.drawio)
+- [Functional_Daigram](docs/PC_Architecture.drawio)
 
 ## Tech Stack
 
