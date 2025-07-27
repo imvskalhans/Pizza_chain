@@ -40,3 +40,6 @@ build/
 *.class
 *.jar
 application-*.properties
+
+.env
+.env.local
