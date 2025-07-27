@@ -4,8 +4,8 @@ FROM eclipse-temurin:21-jdk
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the built jar file from local system to /app in container
-COPY target/*.jar app.jar
+# Copy the exact jar file to the container
+COPY target/pizzaChain-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose port 8080 (default Spring Boot port)
 EXPOSE 8080
