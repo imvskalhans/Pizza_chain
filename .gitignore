@@ -40,3 +40,6 @@ build/
 *.class
 *.jar
 application-*.properties
+
+# Ignore environment config files
+.env
