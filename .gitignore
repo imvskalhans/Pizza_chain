@@ -42,4 +42,4 @@ build/
 application-*.properties
 
 # Ignore environment config files
-.env
+backend/.env
