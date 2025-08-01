@@ -21,6 +21,8 @@ export const useCustomerForm = (initialState) => {
     }
   }, [formData.country]);
 
+  // --- FIX: Added 'formData.country' to the dependency array below ---
+  // This hook depends on both state and country to determine the list of cities.
   useEffect(() => {
     if (formData.state) {
       setCities(locationData[formData.country]?.[formData.state] || []);
@@ -28,11 +30,10 @@ export const useCustomerForm = (initialState) => {
     } else {
       setCities([]);
     }
-  }, [formData.state]);
+  }, [formData.state, formData.country]);
 
   // Effect for calculating form completion progress
   useEffect(() => {
-    // --- FIX: Added "address" to the list of required fields ---
     const requiredFields = [
       "firstName", "lastName", "email", "password", "dob", "gender",
       "address", "country", "state", "city", "postalCode", "terms"
