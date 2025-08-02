@@ -39,8 +39,8 @@ A microservices-based POS system for a pizza restaurant chain using Java Spring 
 
 ## 🌐 Live Demo
 
-Backend API is live at:  
-👉 https://pizzachain-backend.onrender.com
+ **Backend API**: [https://pizzachain-backend.onrender.com](https://pizzachain-backend.onrender.com)
+- **Frontend UI**: [https://pizzachainfe.netlify.app](https://pizzachainfe.netlify.app)
 
 You can test using tools like Postman or cURL.
 
@@ -69,9 +69,10 @@ Create a `.env` file in your root directory with the following content:
 
 ---
 
-## 🚀 Deployment (Render)
+## 🚀 Deployment (Render + Netlify)
 
 Backend is deployed using Docker on Render.
+Frontend is deployed using Netlify.
 
 ### Deployment Steps
 
