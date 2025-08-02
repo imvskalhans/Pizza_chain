@@ -1,6 +1,9 @@
 // Get the base URL from the environment variable
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
+// Export the base URL so other components can use it for images ---
+export const API_BASE_URL_STATIC = API_BASE_URL;
+
 // Define the specific path for the customer resource
 const CUSTOMERS_ENDPOINT = `${API_BASE_URL}/api/customers`;
 
