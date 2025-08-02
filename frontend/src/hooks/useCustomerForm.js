@@ -21,7 +21,6 @@ export const useCustomerForm = (initialState) => {
     }
   }, [formData.country]);
 
-  // --- FIX: Added 'formData.country' to the dependency array below ---
   // This hook depends on both state and country to determine the list of cities.
   useEffect(() => {
     if (formData.state) {
