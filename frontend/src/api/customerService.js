@@ -12,8 +12,8 @@ export const registerCustomer = async (formData) => {
     data.append("photo", formData.photo);
   }
 
-  // Use your actual backend endpoint.
-  const response = await fetch("http://localhost:8080/api/customers", {
+  // backend endpoint.
+  const response = await fetch("https://pizzachain-backend.onrender.com/api/customers", {
     method: "POST",
     body: data,
     // Note: The browser automatically sets the 'Content-Type' to 'multipart/form-data'
