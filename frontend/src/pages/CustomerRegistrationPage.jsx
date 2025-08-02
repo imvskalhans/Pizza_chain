@@ -1,40 +1,19 @@
 // src/pages/CustomerRegistrationPage.jsx
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom'; // Import NavLink for navigation
+import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { User, Mail, Shield, Phone, Calendar, MapPin, Users } from 'lucide-react';
 import { useCustomerForm } from '../hooks/useCustomerForm';
 import { registerCustomer } from '../api/customerService';
 import { demoTermsText } from '../data/termsData';
 import { FormCard } from '../components/FormCard';
 import { locationData } from '../data/locationData';
+import Notification from '../components/Notification'; // --- NEW: Import Notification component ---
 
-// --- NEW: Navigation component is now defined and used within the page ---
+// --- Navigation component ---
 const Navigation = () => (
   <nav className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-2 flex items-center justify-center gap-2 mb-8 max-w-sm mx-auto">
-    <NavLink
-      to="/"
-      className={({ isActive }) =>
-        `px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${
-          isActive
-            ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm'
-            : 'text-gray-600 hover:bg-gray-200/70'
-        }`
-      }
-    >
-      Register
-    </NavLink>
-    <NavLink
-      to="/customers"
-      className={({ isActive }) =>
-        `px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${
-          isActive
-            ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm'
-            : 'text-gray-600 hover:bg-gray-200/70'
-        }`
-      }
-    >
-      Customer List
-    </NavLink>
+    <NavLink to="/" className={({ isActive }) => `px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${isActive ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`}>Register</NavLink>
+    <NavLink to="/customers" className={({ isActive }) => `px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${isActive ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`}>Customer List</NavLink>
   </nav>
 );
 
@@ -49,21 +28,34 @@ const CustomerRegistrationPage = () => {
   const { formData, states, cities, photoPreview, progress, handleChange } = useCustomerForm(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  // --- State to manage notifications ---
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
+  // --- Effect to auto-hide the notification ---
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ show: false, message: '', type: '' });
+      }, 5000); // Hide after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.terms) {
-      alert("You must agree to the terms and conditions.");
+      setNotification({ show: true, message: "You must agree to the terms and conditions.", type: 'error' });
       return;
     }
     setIsSubmitting(true);
     try {
       const result = await registerCustomer(formData);
       console.log("✅ Customer registered:", result);
-      alert("Customer registered successfully!");
+      setNotification({ show: true, message: "Customer registered successfully!", type: 'success' });
+      // Optionally reset form here
     } catch (error) {
       console.error("❌ Error during registration:", error);
-      alert(`Registration failed: ${error.message}`);
+      setNotification({ show: true, message: `Registration failed: ${error.message}`, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -71,6 +63,15 @@ const CustomerRegistrationPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* --- NEW: Render notification component when active --- */}
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ show: false, message: '', type: '' })}
+        />
+      )}
+
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full mb-4 shadow-lg">
           <Users className="w-8 h-8 text-white" />
@@ -79,7 +80,6 @@ const CustomerRegistrationPage = () => {
         <p className="text-lg text-gray-600">Create your account and discover amazing flavors</p>
       </div>
 
-      {/* --- Navigation has been moved here --- */}
       <Navigation />
 
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-md mb-6 p-6">
@@ -93,6 +93,7 @@ const CustomerRegistrationPage = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* The rest of your form JSX remains exactly the same */}
         <FormCard icon={<User className="w-6 h-6 text-orange-500"/>} title="Personal Details" subtitle="Tell us a bit about yourself.">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div><label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">First Name *</label><input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md shadow-sm"/></div>
