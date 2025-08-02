@@ -5,10 +5,13 @@ import com.pizzaChain.customerProfile.dto.CustomerDTO;
 import com.pizzaChain.customerProfile.mapper.CustomerMapper;
 import com.pizzaChain.customerProfile.model.Customer;
 import com.pizzaChain.customerProfile.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/customers")
 @CrossOrigin
+@Validated
 public class CustomerController {
 
     @Autowired
@@ -27,7 +31,10 @@ public class CustomerController {
 
     // Case 1: JSON only (application/json)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CustomerDTO> createCustomerJsonOnly(@RequestBody CreateCustomerDTO dto) {
+    public ResponseEntity<?> createCustomerJsonOnly(@Valid @RequestBody CreateCustomerDTO dto, BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
         Customer customer = CustomerMapper.toEntity(dto);
         Customer saved = customerService.createCustomer(customer);
         return ResponseEntity.status(HttpStatus.CREATED).body(CustomerMapper.toDTO(saved));
@@ -35,9 +42,14 @@ public class CustomerController {
 
     // Case 2: multipart/form-data with photo + JSON in "customer"
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CustomerDTO> createCustomerWithPhoto(
-            @RequestPart("customer") CreateCustomerDTO dto,
+    public ResponseEntity<?> createCustomerWithPhoto(
+            @Valid @RequestPart("customer") CreateCustomerDTO dto,
+            BindingResult result,
             @RequestPart(value = "photo", required = false) MultipartFile photo) {
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
 
         String photoPath = savePhoto(photo);
         if (photoPath == null && photo != null) {
@@ -50,23 +62,13 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(CustomerMapper.toDTO(saved));
     }
 
-    // Get all customers
-//    @GetMapping
-//    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
-//        List<CustomerDTO> dtos = customerService.getAllCustomers().stream()
-//                .map(CustomerMapper::toDTO)
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(dtos);
-//}
-
-    // get all customer with pagination
+    // Get all customers with pagination
     @GetMapping
     public ResponseEntity<Page<CustomerDTO>> getAllCustomers(Pageable pageable) {
         Page<Customer> page = customerService.getAllCustomers(pageable);
         Page<CustomerDTO> dtoPage = page.map(CustomerMapper::toDTO);
         return ResponseEntity.ok(dtoPage);
     }
-
 
     // Get customer by ID
     @GetMapping("/{id}")
@@ -89,7 +91,7 @@ public class CustomerController {
     // Search customers by name
     @GetMapping("/name/{name}")
     public ResponseEntity<List<CustomerDTO>> getCustomerByName(@PathVariable String name) {
-        List<CustomerDTO> result = customerService.getAllCustomers().stream()
+        List<CustomerDTO> result = customerService.getAllCustomers(Pageable.unpaged()).stream()
                 .filter(customer -> {
                     String fullName = (customer.getFirstName() + " " + customer.getLastName()).toLowerCase();
                     return fullName.contains(name.toLowerCase());
@@ -100,12 +102,17 @@ public class CustomerController {
         return result.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(result);
     }
 
-    // Case 3: Update using multipart/form-data (photo + JSON)
+    // Case 3: Update using multipart/form-data
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CustomerDTO> updateCustomerWithPhoto(
+    public ResponseEntity<?> updateCustomerWithPhoto(
             @PathVariable UUID id,
-            @RequestPart("customer") CreateCustomerDTO dto,
+            @Valid @RequestPart("customer") CreateCustomerDTO dto,
+            BindingResult result,
             @RequestPart(value = "photo", required = false) MultipartFile photo) {
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
 
         Optional<Customer> optionalCustomer = customerService.getCustomerById(id);
         if (optionalCustomer.isEmpty()) {
@@ -114,7 +121,6 @@ public class CustomerController {
 
         Customer existing = optionalCustomer.get();
 
-        // Handle file upload if a new photo is provided
         if (photo != null && !photo.isEmpty()) {
             try {
                 String uploadDir = "uploads/";
@@ -131,7 +137,6 @@ public class CustomerController {
             }
         }
 
-        // Update fields
         existing.setEmail(dto.getEmail());
         existing.setPhone(dto.getPhone());
         existing.setAddress(dto.getAddress());
@@ -151,10 +156,17 @@ public class CustomerController {
         return ResponseEntity.ok(CustomerMapper.toDTO(updated));
     }
 
-
-    // Case 4: Update using JSON only (legacy)
+    // Case 4: Update using JSON only
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CustomerDTO> updateCustomerJsonOnly(@PathVariable UUID id, @RequestBody CreateCustomerDTO dto) {
+    public ResponseEntity<?> updateCustomerJsonOnly(
+            @PathVariable UUID id,
+            @Valid @RequestBody CreateCustomerDTO dto,
+            BindingResult result) {
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
+
         return customerService.getCustomerById(id).map(existing -> {
             existing.setFirstName(dto.getFirstName());
             existing.setLastName(dto.getLastName());
@@ -181,7 +193,7 @@ public class CustomerController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    //  Delete customer
+    // Delete customer
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable UUID id) {
         if (customerService.getCustomerById(id).isPresent()) {
