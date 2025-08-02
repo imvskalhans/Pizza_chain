@@ -1,8 +1,8 @@
-package com.pizzaChain.userProfile.mapper;
+package com.pizzaChain.customerProfile.mapper;
 
-import com.pizzaChain.userProfile.dto.CreateCustomerDTO;
-import com.pizzaChain.userProfile.dto.CustomerDTO;
-import com.pizzaChain.userProfile.model.Customer;
+import com.pizzaChain.customerProfile.dto.CreateCustomerDTO;
+import com.pizzaChain.customerProfile.dto.CustomerDTO;
+import com.pizzaChain.customerProfile.model.Customer;
 
 public class CustomerMapper {
 

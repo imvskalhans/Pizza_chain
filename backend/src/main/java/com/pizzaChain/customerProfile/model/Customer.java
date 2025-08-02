@@ -1,54 +1,68 @@
-package com.pizzaChain.userProfile.dto;
+package com.pizzaChain.customerProfile.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-public class CustomerDTO {
+@Entity
+@Table(name = "customers")
+public class Customer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+
+    @Column(nullable = false)
     private String firstName;
+
+    @Column(nullable = false)
     private String lastName;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String phone;
+
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(nullable = false)
+    private String password;
+
     private LocalDate dob;
+
     private String gender;
+
+    @Column(length = 1000)
     private String address;
+
     private String postalCode;
     private String country;
     private String state;
     private String city;
+
     private String photoPath;
+
+    @ElementCollection
     private List<String> interests;
+
     private boolean newsletter;
     private boolean terms;
 
-    public CustomerDTO() {}
+    public Customer() {}
 
-    // All-args constructor or use Builder pattern if preferred
-
-    public CustomerDTO(String firstName, UUID id, String lastName, String phone, String email, String username, LocalDate dob, String address, String gender, String postalCode, String country, String state, String city, String photoPath, List<String> interests, boolean newsletter, boolean terms) {
-        this.firstName = firstName;
-        this.id = id;
-        this.lastName = lastName;
-        this.phone = phone;
-        this.email = email;
-        this.username = username;
-        this.dob = dob;
-        this.address = address;
-        this.gender = gender;
-        this.postalCode = postalCode;
-        this.country = country;
-        this.state = state;
-        this.city = city;
-        this.photoPath = photoPath;
-        this.interests = interests;
-        this.newsletter = newsletter;
-        this.terms = terms;
+    @PrePersist
+    private void generateUsername() {
+        if (this.username == null || this.username.isBlank()) {
+            String base = (firstName + lastName).replaceAll("\\s+", "").toLowerCase();
+            String suffix = phone != null && phone.length() >= 4
+                    ? phone.substring(phone.length() - 4)
+                    : String.valueOf(System.currentTimeMillis() % 10000);
+            this.username = base + "_" + suffix + "_" + UUID.randomUUID().toString().substring(0, 5);
+        }
     }
-
-    // Add getters and setters
-
 
     public String getFirstName() {
         return firstName;
@@ -66,20 +80,20 @@ public class CustomerDTO {
         this.id = id;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getLastName() {
         return lastName;
     }
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPhone() {
@@ -96,6 +110,14 @@ public class CustomerDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public LocalDate getDob() {
@@ -130,14 +152,6 @@ public class CustomerDTO {
         this.postalCode = postalCode;
     }
 
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
     public String getState() {
         return state;
     }
@@ -146,12 +160,12 @@ public class CustomerDTO {
         this.state = state;
     }
 
-    public String getPhotoPath() {
-        return photoPath;
+    public String getCountry() {
+        return country;
     }
 
-    public void setPhotoPath(String photoPath) {
-        this.photoPath = photoPath;
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public String getCity() {
@@ -160,6 +174,14 @@ public class CustomerDTO {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public String getPhotoPath() {
+        return photoPath;
+    }
+
+    public void setPhotoPath(String photoPath) {
+        this.photoPath = photoPath;
     }
 
     public List<String> getInterests() {

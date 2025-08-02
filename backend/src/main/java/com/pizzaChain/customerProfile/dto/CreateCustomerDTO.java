@@ -1,67 +1,36 @@
-package com.pizzaChain.userProfile.model;
+package com.pizzaChain.customerProfile.dto;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
-@Entity
-@Table(name = "customers")
-public class Customer {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-
-    @Column(nullable = false)
+public class CreateCustomerDTO {
     private String firstName;
-
-    @Column(nullable = false)
     private String lastName;
-
-    @Column(unique = true, nullable = false)
     private String email;
-
-    @Column(nullable = false)
     private String phone;
-
-    @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(nullable = false)
     private String password;
-
     private LocalDate dob;
-
     private String gender;
-
-    @Column(length = 1000)
     private String address;
-
     private String postalCode;
     private String country;
     private String state;
     private String city;
-
-    private String photoPath;
-
-    @ElementCollection
     private List<String> interests;
-
     private boolean newsletter;
     private boolean terms;
+    private String photoPath;  // For hybrid mode: store generated path or incoming value
 
-    public Customer() {}
+    public CreateCustomerDTO() {}
 
-    @PrePersist
-    private void generateUsername() {
-        if (this.username == null || this.username.isBlank()) {
-            String base = (firstName + lastName).replaceAll("\\s+", "").toLowerCase();
-            String suffix = phone != null && phone.length() >= 4
-                    ? phone.substring(phone.length() - 4)
-                    : String.valueOf(System.currentTimeMillis() % 10000);
-            this.username = base + "_" + suffix + "_" + UUID.randomUUID().toString().substring(0, 5);
-        }
+    // Getters and setters
+
+    public String getPhotoPath() {
+        return photoPath;
+    }
+
+    public void setPhotoPath(String photoPath) {
+        this.photoPath = photoPath;
     }
 
     public String getFirstName() {
@@ -70,14 +39,6 @@ public class Customer {
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getLastName() {
@@ -102,14 +63,6 @@ public class Customer {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
@@ -152,14 +105,6 @@ public class Customer {
         this.postalCode = postalCode;
     }
 
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
     public String getCountry() {
         return country;
     }
@@ -168,20 +113,20 @@ public class Customer {
         this.country = country;
     }
 
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
     public String getCity() {
         return city;
     }
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getPhotoPath() {
-        return photoPath;
-    }
-
-    public void setPhotoPath(String photoPath) {
-        this.photoPath = photoPath;
     }
 
     public List<String> getInterests() {

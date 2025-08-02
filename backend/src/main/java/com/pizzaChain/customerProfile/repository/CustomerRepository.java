@@ -1,6 +1,6 @@
-package com.pizzaChain.userProfile.repository;
+package com.pizzaChain.customerProfile.repository;
 
-import com.pizzaChain.userProfile.model.Customer;
+import com.pizzaChain.customerProfile.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

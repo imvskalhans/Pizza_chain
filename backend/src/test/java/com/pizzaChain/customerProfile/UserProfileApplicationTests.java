@@ -1,4 +1,4 @@
-package com.pizzaChain.userProfile;
+package com.pizzaChain.customerProfile;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

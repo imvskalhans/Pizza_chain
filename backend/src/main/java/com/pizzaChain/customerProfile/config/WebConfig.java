@@ -1,4 +1,4 @@
-package com.pizzaChain.userProfile.config;
+package com.pizzaChain.customerProfile.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
@@ -16,6 +16,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000", "https://pizzachainfe.netlify.app")
                 .allowedMethods("*")
                 .allowedHeaders("*");
+    }
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        // This makes app less strict about trailing slashes
+        configurer.setUseTrailingSlashMatch(true);
     }
 
     // Serve uploaded images via /uploads/**
