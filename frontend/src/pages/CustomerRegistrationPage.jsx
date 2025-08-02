@@ -1,15 +1,15 @@
 // src/pages/CustomerRegistrationPage.jsx
-import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { User, Mail, Shield, Phone, Calendar, MapPin, Users } from 'lucide-react';
 import { useCustomerForm } from '../hooks/useCustomerForm';
 import { registerCustomer } from '../api/customerService';
 import { demoTermsText } from '../data/termsData';
 import { FormCard } from '../components/FormCard';
 import { locationData } from '../data/locationData';
-import Notification from '../components/Notification'; // --- NEW: Import Notification component ---
+import Notification from '../components/Notification';
 
-// --- Navigation component ---
+// Navigation component
 const Navigation = () => (
   <nav className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-2 flex items-center justify-center gap-2 mb-8 max-w-sm mx-auto">
     <NavLink to="/" className={({ isActive }) => `px-5 py-2 text-sm font-semibold rounded-lg transition-colors ${isActive ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`}>Register</NavLink>
@@ -28,18 +28,8 @@ const CustomerRegistrationPage = () => {
   const { formData, states, cities, photoPreview, progress, handleChange } = useCustomerForm(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  // --- State to manage notifications ---
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
-
-  // --- Effect to auto-hide the notification ---
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 5000); // Hide after 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
+  const navigate = useNavigate(); // Initialize the navigate function
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,19 +41,23 @@ const CustomerRegistrationPage = () => {
     try {
       const result = await registerCustomer(formData);
       console.log("✅ Customer registered:", result);
-      setNotification({ show: true, message: "Customer registered successfully!", type: 'success' });
-      // Optionally reset form here
+      setNotification({ show: true, message: "Registration successful! Redirecting...", type: 'success' });
+
+      // --- NEW: Redirect to customer list after a short delay ---
+      setTimeout(() => {
+        navigate('/customers');
+      }, 2000); // 2-second delay
+
     } catch (error) {
       console.error("❌ Error during registration:", error);
       setNotification({ show: true, message: `Registration failed: ${error.message}`, type: 'error' });
     } finally {
-      setIsSubmitting(false);
+      // We don't set isSubmitting to false here because the page will redirect
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* --- NEW: Render notification component when active --- */}
       {notification.show && (
         <Notification
           message={notification.message}
@@ -93,7 +87,6 @@ const CustomerRegistrationPage = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* The rest of your form JSX remains exactly the same */}
         <FormCard icon={<User className="w-6 h-6 text-orange-500"/>} title="Personal Details" subtitle="Tell us a bit about yourself.">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div><label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">First Name *</label><input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md shadow-sm"/></div>
