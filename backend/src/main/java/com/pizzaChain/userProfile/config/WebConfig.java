@@ -9,16 +9,16 @@ import java.nio.file.Paths;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    // ✅ Allow frontend to access backend
+    // Allow frontend to access backend (local + Netlify)
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("http://localhost:3000", "https://pizzachainfe.netlify.app")
                 .allowedMethods("*")
                 .allowedHeaders("*");
     }
 
-    // ✅ Serve uploaded images via /uploads/**
+    // Serve uploaded images via /uploads/**
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadDir = Paths.get("uploads");
