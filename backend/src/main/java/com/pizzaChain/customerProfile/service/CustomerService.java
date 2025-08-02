@@ -1,8 +1,10 @@
-package com.pizzaChain.userProfile.service;
+package com.pizzaChain.customerProfile.service;
 
-import com.pizzaChain.userProfile.model.Customer;
-import com.pizzaChain.userProfile.repository.CustomerRepository;
+import com.pizzaChain.customerProfile.model.Customer;
+import com.pizzaChain.customerProfile.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,15 +17,18 @@ public class CustomerService {
 
     // Create and save a new customer
     public Customer createCustomer(Customer customer) {
-        // Set a default password if none provided
         if (Optional.ofNullable(customer.getPassword()).orElse("").isBlank()) {
-            customer.setPassword("defaultPass123"); // Ideally hashed
+            customer.setPassword("defaultPass123");
         }
-
         return customerRepository.save(customer);
     }
 
-    // Get all customers
+    // Return paginated customers
+    public Page<Customer> getAllCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable);
+    }
+
+    // Return all customers (for name search etc.)
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
@@ -38,7 +43,7 @@ public class CustomerService {
         return customerRepository.findByEmail(email);
     }
 
-    // Get customer by name (first + last combined)
+    // Get customers by name (first + last combined)
     public List<Customer> getCustomersByName(String name) {
         String nameLower = name.toLowerCase();
         return customerRepository.findAll().stream()
