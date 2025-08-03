@@ -1,33 +1,46 @@
+/**
+ * @file This is the main stylesheet for the application.
+ * It provides global, foundational styles for the main App component.
+ * While most of the application's styling is handled by the Tailwind CSS utility-first framework
+ * within individual components, this file is used for broader layout rules and animations.
+ */
+
+/* Main application container: Centers the content. */
 .App {
   text-align: center;
 }
 
+/* Styles for the spinning React logo. */
 .App-logo {
-  height: 40vmin;
-  pointer-events: none;
+  height: 40vmin; /* Responsive height based on viewport dimensions. */
+  pointer-events: none; /* The logo doesn't intercept mouse clicks. */
 }
 
+/* Media query to apply animation only if the user has not requested reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
 }
 
+/* The main header section, often used as a welcome or landing area. */
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+  background-color: #282c34; /* Dark background color. */
+  min-height: 100vh; /* Takes up the full viewport height. */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  font-size: calc(10px + 2vmin); /* Responsive font size. */
+  color: white; /* Light text color for contrast. */
 }
 
+/* Styling for links within the App header. */
 .App-link {
-  color: #61dafb;
+  color: #61dafb; /* A distinct light blue color for links. */
 }
 
+/* Keyframe animation for the spinning logo. */
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

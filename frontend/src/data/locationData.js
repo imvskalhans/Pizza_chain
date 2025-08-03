@@ -1,3 +1,9 @@
+/**
+ * @file This file contains a nested object representing a hierarchy of locations.
+ * The structure is Country -> State/Province -> City.
+ * This data is ideal for populating dynamic, dependent dropdown menus for address forms.
+ */
+
 export const locationData = {
   India: {
     "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi"],

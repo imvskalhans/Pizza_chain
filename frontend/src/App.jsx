@@ -8,10 +8,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 // Import global styles
 import './App.css';
 
-// Import page components with .jsx extension
-import CustomerRegistrationPage from './pages/CustomerRegistrationPage.jsx';
-import CustomerListPage from './pages/CustomerListPage.jsx';
-import EditCustomerPage from './pages/EditCustomerPage.jsx';
+// CORRECTED: Import paths are now correct for the project structure.
+import CustomerRegistrationPage from './pages/CustomerRegistrationPage';
+import CustomerListPage from './pages/CustomerListPage';
+import EditCustomerPage from './pages/EditCustomerPage';
 
 function App() {
   return (

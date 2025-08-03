@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-//import App from './App';
+// Corrected import to point to App.jsx with the correct extension
 import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
 
