@@ -1,25 +1,72 @@
 package com.pizzaChain.customerProfile.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
 public class CreateCustomerDTO {
+
+    @NotBlank(message = "First name must be 2-50 characters and contain only letters")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "First name must be 2-50 characters and contain only letters")
     private String firstName;
+
+    @NotBlank(message = "Last name must be 2-50 characters and contain only letters")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "Last name must be 2-50 characters and contain only letters")
     private String lastName;
+
+//    @Pattern(
+//            regexp = "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+//            message = "Please enter a valid email address"
+//    )
+    @Email(message = "Email must be a valid email address")
     private String email;
-    private String phone;
+
+
+    @Size(min = 8, message = "Password must be at least 8 characters with uppercase, lowercase, number, and special character")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&].*$",
+            message = "Password must be at least 8 characters with uppercase, lowercase, number, and special character")
     private String password;
+
+    @NotBlank(message = "Please enter a valid phone number")
+    @Pattern(regexp = "^[+]?[1-9][\\d]{0,15}$", message = "Please enter a valid phone number")
+    private String phone; // Optional field - no @NotBlank
+
+    @NotNull(message = "Date of birth is required")
+    @Past(message = "Date of birth must be in the past")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dob;
+
+    @NotBlank(message = "Please select your gender")
+    @Pattern(regexp = "^(male|female|other)$", message = "Please select your gender")
     private String gender;
-    private String address;
-    private String postalCode;
+
+    @NotBlank(message = "Please select your country")
     private String country;
+
+    @NotBlank(message = "Please select your state/province")
     private String state;
+
+    @NotBlank(message = "Please select your city")
     private String city;
-    private List<String> interests;
-    private boolean newsletter;
+
+    @NotBlank(message = "Please enter a valid postal code")
+    @Pattern(regexp = "^[A-Za-z0-9\\s-]{3,10}$", message = "Please enter a valid postal code")
+    private String postalCode;
+
+    @Size(max = 200, message = "Address must not exceed 200 characters")
+    private String address; // Optional field
+
+    private List<String> interests; // Optional field
+
+    private boolean newsletter; // Optional boolean, defaults to false
+
+    @AssertTrue(message = "You must agree to the terms and conditions")
     private boolean terms;
-    private String photoPath;  // For hybrid mode: store generated path or incoming value
+
+    @Size(max = 500, message = "Photo path must not exceed 500 characters")
+    private String photoPath; // Optional field  // For hybrid mode: store generated path or incoming value
 
     public CreateCustomerDTO() {}
 

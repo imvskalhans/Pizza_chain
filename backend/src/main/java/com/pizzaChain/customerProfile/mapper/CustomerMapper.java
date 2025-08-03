@@ -2,7 +2,9 @@ package com.pizzaChain.customerProfile.mapper;
 
 import com.pizzaChain.customerProfile.dto.CreateCustomerDTO;
 import com.pizzaChain.customerProfile.dto.CustomerDTO;
+import com.pizzaChain.customerProfile.dto.UpdateCustomerDTO;
 import com.pizzaChain.customerProfile.model.Customer;
+import jakarta.validation.Valid;
 
 public class CustomerMapper {
 
@@ -52,4 +54,24 @@ public class CustomerMapper {
         user.setTerms(dto.isTerms());
         return user;
     }
+
+
+    public static void updateEntity(Customer customer, UpdateCustomerDTO dto) {
+        if (dto.getEmail() != null) customer.setEmail(dto.getEmail());
+        if (dto.getPhone() != null) customer.setPhone(dto.getPhone());
+        if (dto.getAddress() != null) customer.setAddress(dto.getAddress());
+        if (dto.getPostalCode() != null) customer.setPostalCode(dto.getPostalCode());
+        if (dto.getCountry() != null) customer.setCountry(dto.getCountry());
+        if (dto.getState() != null) customer.setState(dto.getState());
+        if (dto.getCity() != null) customer.setCity(dto.getCity());
+        if (dto.getPhotoPath() != null) customer.setPhotoPath(dto.getPhotoPath());
+        if (dto.getInterests() != null) customer.setInterests(dto.getInterests());
+        if (dto.getNewsletter() != null) customer.setNewsletter(dto.getNewsletter());
+        if (dto.getTerms() != null) customer.setTerms(dto.getTerms());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            customer.setPassword(dto.getPassword());
+        }
+    }
+
 }
