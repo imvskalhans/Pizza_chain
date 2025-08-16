@@ -1,6 +1,7 @@
 package com.pizzaChain.customerProfile.controller;
 
 import com.pizzaChain.customerProfile.dto.CreateCustomerDTO;
+import com.pizzaChain.customerProfile.dto.UpdateCustomerDTO;
 import com.pizzaChain.customerProfile.dto.CustomerDTO;
 import com.pizzaChain.customerProfile.mapper.CustomerMapper;
 import com.pizzaChain.customerProfile.model.Customer;
@@ -10,8 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
-import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,30 +31,24 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    // Case 1: JSON only (application/json)
+    // ---------------- CREATE ----------------
+
+    // JSON only
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createCustomerJsonOnly(@Valid @RequestBody CreateCustomerDTO dto, BindingResult result) {
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
-        }
+    public ResponseEntity<?> createCustomerJsonOnly(@Valid @RequestBody CreateCustomerDTO dto) {
         Customer customer = CustomerMapper.toEntity(dto);
         Customer saved = customerService.createCustomer(customer);
         return ResponseEntity.status(HttpStatus.CREATED).body(CustomerMapper.toDTO(saved));
     }
 
-    // Case 2: multipart/form-data with photo + JSON in "customer"
+    // multipart/form-data with JSON in "customer" + optional photo
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createCustomerWithPhoto(
             @Valid @RequestPart("customer") CreateCustomerDTO dto,
-            BindingResult result,
             @RequestPart(value = "photo", required = false) MultipartFile photo) {
 
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
-        }
-
         String photoPath = savePhoto(photo);
-        if (photoPath == null && photo != null) {
+        if (photo != null && photoPath == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -62,7 +58,51 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(CustomerMapper.toDTO(saved));
     }
 
-    // Get all customers with pagination
+    // ---------------- UPDATE ----------------
+
+    // multipart/form-data (JSON in "customer" + optional photo)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateCustomerWithPhoto(
+            @PathVariable UUID id,
+            @Valid @RequestPart("customer") UpdateCustomerDTO dto,
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
+
+        Optional<Customer> optionalCustomer = customerService.getCustomerById(id);
+        if (optionalCustomer.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Customer existing = optionalCustomer.get();
+
+        if (photo != null && !photo.isEmpty()) {
+            String photoPath = savePhoto(photo);
+            if (photoPath != null) {
+                existing.setPhotoPath(photoPath);
+            }
+        }
+
+        applyUpdates(existing, dto);
+        Customer updated = customerService.updateCustomer(existing);
+        return ResponseEntity.ok(CustomerMapper.toDTO(updated));
+    }
+
+    // JSON only
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateCustomerJsonOnly(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCustomerDTO dto) {
+
+        return customerService.getCustomerById(id)
+                .map(existing -> {
+                    applyUpdates(existing, dto);
+                    Customer updated = customerService.updateCustomer(existing);
+                    return ResponseEntity.ok(CustomerMapper.toDTO(updated));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ---------------- READ ----------------
+
     @GetMapping
     public ResponseEntity<Page<CustomerDTO>> getAllCustomers(Pageable pageable) {
         Page<Customer> page = customerService.getAllCustomers(pageable);
@@ -70,7 +110,6 @@ public class CustomerController {
         return ResponseEntity.ok(dtoPage);
     }
 
-    // Get customer by ID
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable UUID id) {
         return customerService.getCustomerById(id)
@@ -79,7 +118,6 @@ public class CustomerController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Get customer by email
     @GetMapping("/email/{email}")
     public ResponseEntity<CustomerDTO> getCustomerByEmail(@PathVariable String email) {
         return customerService.getCustomerByEmail(email)
@@ -88,10 +126,12 @@ public class CustomerController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Search customers by name
     @GetMapping("/name/{name}")
     public ResponseEntity<List<CustomerDTO>> getCustomerByName(@PathVariable String name) {
-        List<CustomerDTO> result = customerService.getAllCustomers(Pageable.unpaged()).stream()
+        List<CustomerDTO> result = customerService
+                .getAllCustomers(Pageable.unpaged())
+                .getContent() // <-- FIXED: use getContent() before stream
+                .stream()
                 .filter(customer -> {
                     String fullName = (customer.getFirstName() + " " + customer.getLastName()).toLowerCase();
                     return fullName.contains(name.toLowerCase());
@@ -102,98 +142,8 @@ public class CustomerController {
         return result.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(result);
     }
 
-    // Case 3: Update using multipart/form-data
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateCustomerWithPhoto(
-            @PathVariable UUID id,
-            @Valid @RequestPart("customer") CreateCustomerDTO dto,
-            BindingResult result,
-            @RequestPart(value = "photo", required = false) MultipartFile photo) {
+    // ---------------- DELETE ----------------
 
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
-        }
-
-        Optional<Customer> optionalCustomer = customerService.getCustomerById(id);
-        if (optionalCustomer.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Customer existing = optionalCustomer.get();
-
-        if (photo != null && !photo.isEmpty()) {
-            try {
-                String uploadDir = "uploads/";
-                String fileName = UUID.randomUUID() + "_" + photo.getOriginalFilename();
-                Path uploadPath = Paths.get(uploadDir);
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-                Path filePath = uploadPath.resolve(fileName);
-                Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                existing.setPhotoPath("/uploads/" + fileName);
-            } catch (IOException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
-        }
-
-        existing.setEmail(dto.getEmail());
-        existing.setPhone(dto.getPhone());
-        existing.setAddress(dto.getAddress());
-        existing.setPostalCode(dto.getPostalCode());
-        existing.setCountry(dto.getCountry());
-        existing.setState(dto.getState());
-        existing.setCity(dto.getCity());
-        existing.setInterests(dto.getInterests());
-        existing.setNewsletter(dto.isNewsletter());
-        existing.setTerms(dto.isTerms());
-
-        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            existing.setPassword(dto.getPassword());
-        }
-
-        Customer updated = customerService.createCustomer(existing);
-        return ResponseEntity.ok(CustomerMapper.toDTO(updated));
-    }
-
-    // Case 4: Update using JSON only
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCustomerJsonOnly(
-            @PathVariable UUID id,
-            @Valid @RequestBody CreateCustomerDTO dto,
-            BindingResult result) {
-
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
-        }
-
-        return customerService.getCustomerById(id).map(existing -> {
-            existing.setFirstName(dto.getFirstName());
-            existing.setLastName(dto.getLastName());
-            existing.setEmail(dto.getEmail());
-            existing.setPhone(dto.getPhone());
-            existing.setDob(dto.getDob());
-            existing.setGender(dto.getGender());
-            existing.setAddress(dto.getAddress());
-            existing.setPostalCode(dto.getPostalCode());
-            existing.setCountry(dto.getCountry());
-            existing.setState(dto.getState());
-            existing.setCity(dto.getCity());
-            existing.setPhotoPath(dto.getPhotoPath());
-            existing.setInterests(dto.getInterests());
-            existing.setNewsletter(dto.isNewsletter());
-            existing.setTerms(dto.isTerms());
-
-            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-                existing.setPassword(dto.getPassword());
-            }
-
-            Customer updated = customerService.createCustomer(existing);
-            return ResponseEntity.ok(CustomerMapper.toDTO(updated));
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
-    // Delete customer
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable UUID id) {
         if (customerService.getCustomerById(id).isPresent()) {
@@ -204,11 +154,41 @@ public class CustomerController {
         }
     }
 
-    // Helper to handle photo saving
+    // ---------------- HELPERS ----------------
+
+    /** Update only non-null fields from UpdateCustomerDTO */
+    private void applyUpdates(Customer existing, UpdateCustomerDTO dto) {
+        if (dto.getFirstName() != null) existing.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) existing.setLastName(dto.getLastName());
+        if (dto.getEmail() != null) existing.setEmail(dto.getEmail());
+        if (dto.getPhone() != null) existing.setPhone(dto.getPhone());
+        if (dto.getDob() != null) existing.setDob(dto.getDob());
+        if (dto.getGender() != null) existing.setGender(dto.getGender());
+        if (dto.getAddress() != null) existing.setAddress(dto.getAddress());
+        if (dto.getPostalCode() != null) existing.setPostalCode(dto.getPostalCode());
+        if (dto.getCountry() != null) existing.setCountry(dto.getCountry());
+        if (dto.getState() != null) existing.setState(dto.getState());
+        if (dto.getCity() != null) existing.setCity(dto.getCity());
+        if (dto.getInterests() != null) existing.setInterests(dto.getInterests());
+        if (dto.getNewsletter() != null) existing.setNewsletter(dto.getNewsletter());
+        if (dto.getTerms() != null) existing.setTerms(dto.getTerms());
+
+        // Only if provided and not blank
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existing.setPassword(dto.getPassword());
+        }
+        if (dto.getPhotoPath() != null) {
+            existing.setPhotoPath(dto.getPhotoPath());
+        }
+    }
+
+    /** Save uploaded photo to /uploads directory and return web path (/uploads/filename) */
     private String savePhoto(MultipartFile photo) {
+        if (photo == null || photo.isEmpty()) return null;
+
         try {
             String uploadDir = "uploads/";
-            String fileName = UUID.randomUUID() + "_" + photo.getOriginalFilename();
+            String fileName = UUID.randomUUID() + "_" + Objects.requireNonNullElse(photo.getOriginalFilename(), "photo");
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
@@ -221,4 +201,26 @@ public class CustomerController {
             return null;
         }
     }
+
+    // -------- Validation error handler (covers @RequestBody/@RequestPart) --------
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+            errors.put(fe.getField(), fe.getDefaultMessage());
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Validation failed");
+        body.put("errors", errors);
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<CustomerDTO>> searchCustomers(
+            @RequestParam String keyword,
+            Pageable pageable) {
+        return ResponseEntity.ok(customerService.searchByNameOrEmail(keyword, pageable));
+    }
+
+
 }

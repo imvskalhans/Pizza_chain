@@ -1,22 +1,27 @@
+/**
+ * @file Main application component responsible for routing.
+ */
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import CustomerRegistrationPage from './pages/CustomerRegistrationPage';
-import CustomerListPage from './pages/CustomerListPage';
-import EditCustomerPage from './pages/EditCustomerPage';
+import Layout from './components/common/Layout';
+import CustomerRegistrationPage from './features/customers/pages/CustomerRegistrationPage';
+import CustomerListPage from './features/customers/pages/CustomerListPage';
+import EditCustomerPage from './features/customers/pages/EditCustomerPage';
+import { NotificationProvider } from './hooks/useNotification';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-orange-100 via-red-100 to-pink-100 py-8 px-4">
-        <main>
+    <NotificationProvider>
+      <BrowserRouter>
+        <Layout>
           <Routes>
             <Route path="/" element={<CustomerRegistrationPage />} />
             <Route path="/customers" element={<CustomerListPage />} />
             <Route path="/edit/:customerId" element={<EditCustomerPage />} />
           </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+        </Layout>
+      </BrowserRouter>
+    </NotificationProvider>
   );
 }
 

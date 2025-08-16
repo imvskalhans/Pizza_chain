@@ -48,8 +48,8 @@ public class Customer {
     @ElementCollection
     private List<String> interests;
 
-    private boolean newsletter;
-    private boolean terms;
+    private Boolean newsletter;
+    private Boolean terms;
 
     public Customer() {}
 
@@ -192,19 +192,9 @@ public class Customer {
         this.interests = interests;
     }
 
-    public boolean isNewsletter() {
-        return newsletter;
-    }
+    public Boolean isNewsletter() { return newsletter; }
+    public void setNewsletter(Boolean newsletter) { this.newsletter = newsletter; }
 
-    public void setNewsletter(boolean newsletter) {
-        this.newsletter = newsletter;
-    }
-
-    public boolean isTerms() {
-        return terms;
-    }
-
-    public void setTerms(boolean terms) {
-        this.terms = terms;
-    }
+    public Boolean isTerms() { return terms; }
+    public void setTerms(Boolean terms) { this.terms = terms; }
 }
