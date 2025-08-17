@@ -7,6 +7,7 @@ import com.pizzaChain.customerProfile.mapper.CustomerMapper;
 import com.pizzaChain.customerProfile.model.Customer;
 import com.pizzaChain.customerProfile.service.CustomerService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -218,7 +219,7 @@ public class CustomerController {
     @GetMapping("/search")
     public ResponseEntity<Page<CustomerDTO>> searchCustomers(
             @RequestParam String keyword,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(customerService.searchByNameOrEmail(keyword, pageable));
     }
 
