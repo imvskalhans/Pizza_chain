@@ -3,10 +3,10 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Mail, Phone } from 'lucide-react';
+import { Edit, Trash2, Mail, Phone, MessageSquare } from 'lucide-react';
 import { API_BASE_URL_STATIC } from '../../../api/customerService';
 
-export const CustomerGridCard = ({ customer, onDeleteClick }) => {
+export const CustomerGridCard = ({ customer, onDeleteClick, onFeedbackClick }) => {
     const calculateAge = (dob) => {
         if (!dob) return 'N/A';
         const birthDate = new Date(dob);
@@ -47,6 +47,9 @@ export const CustomerGridCard = ({ customer, onDeleteClick }) => {
                 </div>
             </div>
             <div className="bg-gray-50/80 px-5 py-3 flex items-center justify-end gap-2 border-t border-gray-200/80">
+                <button onClick={() => onFeedbackClick(customer)} className="text-green-600 hover:text-green-900 p-2 rounded-full hover:bg-green-100 transition-colors" title="View Feedback">
+                    <MessageSquare className="w-4 h-4" />
+                </button>
                 <Link to={`/edit/${customer.id}`} className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-100 transition-colors" title="Edit customer">
                     <Edit className="w-4 h-4" />
                 </Link>

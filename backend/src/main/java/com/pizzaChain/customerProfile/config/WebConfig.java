@@ -9,13 +9,19 @@ import java.nio.file.Paths;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    // Allow frontend to access backend (local + Netlify)
+    // Allow frontend to access backend (local + Netlify + chatbot)
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000", "https://pizzachainfe.netlify.app")
-                .allowedMethods("*")
-                .allowedHeaders("*");
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:3001",  // In case React runs on 3001
+                        "http://127.0.0.1:3000",
+                        "https://pizzachainfe.netlify.app"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);  // This might be needed for some requests
     }
 
     @Override
