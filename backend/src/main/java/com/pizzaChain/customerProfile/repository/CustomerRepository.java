@@ -30,10 +30,10 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     @Query("""
        SELECT c FROM Customer c
        WHERE 
-           LOWER(COALESCE(c.firstName, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(COALESCE(c.lastName, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(COALESCE(c.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(CONCAT(TRIM(COALESCE(c.firstName, '')), ' ', TRIM(COALESCE(c.lastName, '')))) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           LOWER(c.firstName) LIKE LOWER(:keyword)
+        OR LOWER(c.lastName) LIKE LOWER(:keyword)
+        OR LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE LOWER(:keyword)
+        OR LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
        """)
     Page<Customer> searchByNameOrEmail(@Param("keyword") String keyword, Pageable pageable);
 
