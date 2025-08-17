@@ -1,13 +1,19 @@
 package com.pizzaChain.customerProfile.model;
 
+import com.pizzaChain.feedback.model.CustomerFeedback;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "customers")
 public class Customer {
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<CustomerFeedback> feedbacks = new ArrayList<>();
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -22,10 +22,10 @@ export const useCustomerForm = (initialState, isEditMode = false) => {
 
   useEffect(() => {
     if (formData?.country) {
-      const newStates = Object.keys(locationData[formData.country] || {});
-      setStates(newStates);
-      if (!newStates.includes(formData.state)) {
-        setFormData(prev => ({ ...prev, state: "", city: "" }));
+      const countryStates = Object.keys(locationData[formData.country] || {});
+      setStates(countryStates);
+      if (!countryStates.includes(formData.state)) {
+        setFormData(prev => ({...prev, state: '', city: ''}));
       }
     } else {
       setStates([]);
@@ -34,19 +34,19 @@ export const useCustomerForm = (initialState, isEditMode = false) => {
 
   useEffect(() => {
     if (formData?.country && formData?.state) {
-      const newCities = locationData[formData.country]?.[formData.state] || [];
-      setCities(newCities);
-      if (!newCities.includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: "" }));
+      const stateCities = locationData[formData.country]?.[formData.state] || [];
+      setCities(stateCities);
+      if (!stateCities.includes(formData.city)) {
+        setFormData(prev => ({...prev, city: ''}));
       }
     } else {
       setCities([]);
     }
-  }, [formData?.country, formData?.state, formData?.city]);
+  }, [formData?.state, formData?.country, formData?.city]);
 
   useEffect(() => {
     if (!formData) return;
-    const allFields = ["firstName", "lastName", "email", "password", "phone", "dob", "gender", "country", "state", "city", "postalCode", "terms"];
+    const allFields = ["firstName", "lastName", "email", "password", "phone", "dob", "gender", "country", "state", "city", "postalCode", "terms", "address"];
     const requiredFields = isEditMode ? allFields.filter(f => f !== 'password' && f !== 'terms') : allFields;
     const completedFields = requiredFields.filter(field => !!formData[field]).length;
     const progressPercentage = requiredFields.length > 0 ? (completedFields / requiredFields.length) * 100 : 0;
@@ -55,19 +55,29 @@ export const useCustomerForm = (initialState, isEditMode = false) => {
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked, files } = e.target;
-    const newValue = type === 'checkbox' ? checked : (type === 'file' ? files[0] : value);
 
-    setFormData(prev => {
-      const updated = { ...prev, [name]: newValue };
-      if (touched[name]) {
-        const error = validateField(name, newValue, updated, isEditMode);
-        setErrors(prevErrors => ({ ...prevErrors, [name]: error }));
-      }
-      return updated;
-    });
+    if (name === 'interests') {
+        setFormData(prev => {
+            const interests = prev.interests || [];
+            const newInterests = checked
+                ? [...interests, value]
+                : interests.filter(interest => interest !== value);
+            return { ...prev, interests: newInterests };
+        });
+    } else {
+        const newValue = type === 'checkbox' ? checked : (type === 'file' ? files[0] : value);
+        setFormData(prev => {
+          const updated = { ...prev, [name]: newValue };
+          if (touched[name]) {
+            const error = validateField(name, newValue, updated, isEditMode);
+            setErrors(prevErrors => ({ ...prevErrors, [name]: error }));
+          }
+          return updated;
+        });
 
-    if (type === 'file' && files[0]) {
-      setPhotoPreview(URL.createObjectURL(files[0]));
+        if (type === 'file' && files[0]) {
+          setPhotoPreview(URL.createObjectURL(files[0]));
+        }
     }
   }, [isEditMode, touched]);
 

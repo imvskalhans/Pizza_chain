@@ -3,13 +3,13 @@
  */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Shield, MapPin, Users, Calendar } from 'lucide-react';
+import { User, Mail, Shield, MapPin, Users, Calendar, Heart } from 'lucide-react';
 import { useCustomerForm } from '../hooks/useCustomerForm';
 import { demoTermsText } from '../../../data/termsData';
 import { locationData } from '../../../data/locationData';
 import { FormCard } from '../../../components/common/FormCard';
 import { ValidatedInput } from '../../../components/common/ValidateInput';
-import { PhoneInput } from './PhoneInput';
+import { PhoneInput } from '../components/PhoneInput';
 import { ErrorMessage } from '../../../components/common/ErrorMessage';
 import { Button } from '../../../components/common/Button';
 
@@ -40,18 +40,29 @@ const CustomerForm = ({ initialState, onSubmit, isSubmitting, isEditMode = false
     }
   };
 
+  const interestOptions = ["Pizza", "Soda", "Salad", "Wings", "Dessert"];
+
+  // CRITICAL FIX: Add null check to prevent accessing properties on undefined formData
+  if (!formData) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-gray-500">Loading form data...</div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {!isEditMode && <ProgressTracker progress={progress} />}
 
       <FormCard icon={<User />} title="Personal Details" subtitle="Tell us a bit about yourself.">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ValidatedInput label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} error={errors.firstName} required readOnly={isEditMode} />
-            <ValidatedInput label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} error={errors.lastName} required readOnly={isEditMode} />
-            <ValidatedInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} required icon={Mail} className="md:col-span-2" />
-            <ValidatedInput label="Password" name="password" type="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} icon={Shield} required={!isEditMode} className="md:col-span-2" placeholder={isEditMode ? "Leave blank to keep current password" : "Uppercase, lowercase, number, & special char"} showPasswordToggle />
-            <PhoneInput label="Phone Number" name="phone" value={formData.phone} countryCode={formData.countryCode} onChange={handleChange} onBlur={() => handleBlur('phone')} onCountryCodeChange={(e) => setFormData(prev => ({...prev, countryCode: e.target.value}))} error={errors.phone} required />
-            <ValidatedInput label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleChange} onBlur={handleBlur} error={errors.dob} icon={Calendar} required readOnly={isEditMode} />
+            <ValidatedInput label="First Name" name="firstName" value={formData.firstName || ''} onChange={handleChange} onBlur={handleBlur} error={errors.firstName} required readOnly={isEditMode} />
+            <ValidatedInput label="Last Name" name="lastName" value={formData.lastName || ''} onChange={handleChange} onBlur={handleBlur} error={errors.lastName} required readOnly={isEditMode} />
+            <ValidatedInput label="Email" name="email" type="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlur} error={errors.email} required icon={Mail} className="md:col-span-2" />
+            <ValidatedInput label="Password" name="password" type="password" value={formData.password || ''} onChange={handleChange} onBlur={handleBlur} error={errors.password} icon={Shield} required={!isEditMode} className="md:col-span-2" placeholder={isEditMode ? "Leave blank to keep current password" : "Uppercase, lowercase, number, & special char"} showPasswordToggle />
+            <PhoneInput label="Phone Number" name="phone" value={formData.phone || ''} countryCode={formData.countryCode || '+91'} onChange={handleChange} onBlur={() => handleBlur('phone')} onCountryCodeChange={(e) => setFormData(prev => ({...prev, countryCode: e.target.value}))} error={errors.phone} required />
+            <ValidatedInput label="Date of Birth" name="dob" type="date" value={formData.dob || ''} onChange={handleChange} onBlur={handleBlur} error={errors.dob} icon={Calendar} required readOnly={isEditMode} />
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
               <div className="flex items-center space-x-4">
@@ -76,28 +87,66 @@ const CustomerForm = ({ initialState, onSubmit, isSubmitting, isEditMode = false
 
       <FormCard icon={<MapPin />} title="Address Information" subtitle="Where can we find you?">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* THIS IS THE NEWLY ADDED ADDRESS FIELD */}
             <div className="md:col-span-2">
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Street Address <span className="text-red-500">*</span></label>
-                <textarea id="address" name="address" value={formData.address} rows="2" onChange={handleChange} onBlur={() => handleBlur('address')} className={`w-full p-2 border rounded-md ${errors.address ? 'border-red-500' : 'border-gray-300'}`}></textarea>
+                <textarea id="address" name="address" value={formData.address || ''} rows="2" onChange={handleChange} onBlur={() => handleBlur('address')} className={`w-full p-2 border rounded-md ${errors.address ? 'border-red-500' : 'border-gray-300'}`}></textarea>
                 <ErrorMessage message={errors.address} />
             </div>
             <div className="md:col-span-2">
                 <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">Country <span className="text-red-500">*</span></label>
-                <select id="country" name="country" value={formData.country} onChange={handleChange} onBlur={() => handleBlur('country')} className={`w-full p-2 border rounded-md ${errors.country ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select Country</option>{Object.keys(locationData).map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <select id="country" name="country" value={formData.country || ''} onChange={handleChange} onBlur={() => handleBlur('country')} className={`w-full p-2 border rounded-md ${errors.country ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select Country</option>{Object.keys(locationData).map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <ErrorMessage message={errors.country} />
             </div>
             <div>
                 <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State / Province <span className="text-red-500">*</span></label>
-                <select id="state" name="state" value={formData.state} onChange={handleChange} onBlur={() => handleBlur('state')} disabled={!formData.country} className={`w-full p-2 border rounded-md disabled:bg-gray-100 ${errors.state ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select State</option>{states.map(s => <option key={s} value={s}>{s}</option>)}</select>
+                <select id="state" name="state" value={formData.state || ''} onChange={handleChange} onBlur={() => handleBlur('state')} disabled={!formData.country} className={`w-full p-2 border rounded-md disabled:bg-gray-100 ${errors.state ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select State</option>{states.map(s => <option key={s} value={s}>{s}</option>)}</select>
                 <ErrorMessage message={errors.state} />
             </div>
             <div>
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
-                <select id="city" name="city" value={formData.city} onChange={handleChange} onBlur={() => handleBlur('city')} disabled={!formData.state} className={`w-full p-2 border rounded-md disabled:bg-gray-100 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select City</option>{cities.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <select id="city" name="city" value={formData.city || ''} onChange={handleChange} onBlur={() => handleBlur('city')} disabled={!formData.state} className={`w-full p-2 border rounded-md disabled:bg-gray-100 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}><option value="">Select City</option>{cities.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <ErrorMessage message={errors.city} />
             </div>
-            <ValidatedInput label="Postal Code" name="postalCode" value={formData.postalCode} onChange={handleChange} onBlur={handleBlur} error={errors.postalCode} required />
+            <ValidatedInput label="Postal Code" name="postalCode" value={formData.postalCode || ''} onChange={handleChange} onBlur={handleBlur} error={errors.postalCode} required />
+        </div>
+      </FormCard>
+
+      <FormCard icon={<Heart />} title="Preferences" subtitle="Help us tailor your experience.">
+        <div className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">What are your interests?</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {interestOptions.map(interest => (
+                        <label key={interest} className="flex items-center p-2 rounded-md hover:bg-gray-100 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="interests"
+                                value={interest}
+                                checked={(formData.interests || []).includes(interest)}
+                                onChange={handleChange}
+                                className="h-4 w-4 text-orange-600 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-800">{interest}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+            <div className="flex items-start">
+                <div className="flex items-center h-5">
+                    <input
+                        id="newsletter"
+                        name="newsletter"
+                        type="checkbox"
+                        checked={formData.newsletter || false}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-orange-600 border-gray-300 rounded"
+                    />
+                </div>
+                <div className="ml-3 text-sm">
+                    <label htmlFor="newsletter" className="font-medium text-gray-700">Subscribe to our newsletter</label>
+                    <p className="text-gray-500">Get the latest deals and updates straight to your inbox.</p>
+                </div>
+            </div>
         </div>
       </FormCard>
 
@@ -112,7 +161,7 @@ const CustomerForm = ({ initialState, onSubmit, isSubmitting, isEditMode = false
         ) : (
           <div className="w-full space-y-6">
             <div className="flex items-start">
-              <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleChange} className="h-4 w-4 text-orange-600 border-gray-300 rounded mt-1" />
+              <input id="terms" name="terms" type="checkbox" checked={formData.terms || false} onChange={handleChange} className="h-4 w-4 text-orange-600 border-gray-300 rounded mt-1" />
               <div className="ml-3 text-sm">
                 <label htmlFor="terms" className="font-medium text-gray-700">I agree to the Terms and Conditions *</label>
                 <button type="button" onClick={() => setShowTerms(!showTerms)} className="ml-2 text-orange-600 hover:underline text-xs font-semibold">({showTerms ? 'Hide' : 'View'} Terms)</button>

@@ -2,6 +2,7 @@
  * @file Provides a consistent layout wrapper for all pages.
  */
 import React from 'react';
+import ChatWidget from './ChatWidget'; // Import the new ChatWidget
 
 const Layout = ({ children }) => {
   return (
@@ -12,6 +13,9 @@ const Layout = ({ children }) => {
       <footer className="text-center mt-12 text-sm text-gray-500">
         <p>&copy; {new Date().getFullYear()} Pizza Chain. All Rights Reserved.</p>
       </footer>
+
+      {/* Add the Chat Widget here */}
+      <ChatWidget />
     </div>
   );
 };
