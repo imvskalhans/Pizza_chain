@@ -7,6 +7,7 @@ import Layout from './components/common/Layout';
 import CustomerRegistrationPage from './features/customers/pages/CustomerRegistrationPage';
 import CustomerListPage from './features/customers/pages/CustomerListPage';
 import EditCustomerPage from './features/customers/pages/EditCustomerPage';
+import APIDocsPage from './features/customers/pages/APIDocsPage'; // Import the new page
 import { NotificationProvider } from './hooks/useNotification';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<CustomerRegistrationPage />} />
             <Route path="/customers" element={<CustomerListPage />} />
             <Route path="/edit/:customerId" element={<EditCustomerPage />} />
+            <Route path="/api-docs" element={<APIDocsPage />} /> {/* Add the new route */}
           </Routes>
         </Layout>
       </BrowserRouter>

@@ -15,6 +15,8 @@ import { LoadingState, ErrorState, EmptyState } from '../components/contentState
 import { locationData } from '../../../data/locationData';
 import { CustomerGridCard } from '../components/CustomerGridCard';
 import FeedbackModal from '../components/FeedbackModal';
+import { Navigation } from '../../../components/common/Navigation';
+import { PageHeader } from '../../../components/common/PageHeader';
 
 const CustomerListPage = () => {
     const [viewMode, setViewMode] = useState('table');
@@ -68,8 +70,26 @@ const CustomerListPage = () => {
     };
 
     const handleExport = useCallback(() => {
-        showNotification('Exporting customer data...', 'success');
-    }, [showNotification]);
+        if (customers.length === 0) {
+            showNotification('No customers to export.', 'error');
+            return;
+        }
+        const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Date of Birth', 'Country', 'State', 'City', 'Address', 'Postal Code'];
+        const csvContent = [
+            headers.join(','),
+            ...customers.map(c => headers.map(header => `"${c[header.toLowerCase().replace(/ /g, '')] || ''}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `customers-${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showNotification(`Exported ${customers.length} customers successfully!`, 'success');
+    }, [customers, showNotification]);
 
     const stats = useMemo(() => ({
         total: totalElements,
@@ -93,38 +113,13 @@ const CustomerListPage = () => {
                 customer={selectedCustomer}
             />
 
-            <div className="mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg">
-                            <Users className="h-8 w-8 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
-                            <p className="text-gray-600 mt-1">
-                                {totalElements > 0 ? `Managing ${totalElements.toLocaleString()} valued customers` : 'Start building your customer community'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={toggleFilters} className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${showFilters ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                            <Filter className="h-4 w-4" />
-                            Filters
-                        </button>
-                        <div className="flex items-center bg-white rounded-lg border border-gray-200 p-1">
-                            <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'table' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                                <List className="h-4 w-4" />
-                            </button>
-                            <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                                <Grid className="h-4 w-4" />
-                            </button>
-                        </div>
-                        <Link to="/" className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl">
-                            <Plus className="h-4 w-4" />
-                            Add Customer
-                        </Link>
-                    </div>
-                </div>
+            <div className="text-center mb-8">
+                <PageHeader
+                    icon={<Users className="h-8 w-8" />}
+                    title="Customer Management"
+                    subtitle={totalElements > 0 ? `Managing ${totalElements.toLocaleString()} valued customers` : 'Start building your customer community'}
+                />
+                <Navigation />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -134,58 +129,91 @@ const CustomerListPage = () => {
                 <StatsCard title="Countries" value={stats.countries} change="Global reach" icon={<div className="h-6 w-6 text-blue-600">🌍</div>} color="blue" />
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden">
-                <div className="p-6 border-b border-gray-200/50">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        <div className="flex-1 relative">
+            <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                        <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search customers..."
                                 value={searchTerm}
                                 onChange={(e) => handleSearchChange(e.target.value)}
-                                className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                             />
                             {searchTerm && (
-                                <button onClick={clearSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
+                                <button onClick={clearSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">✕</button>
                             )}
                         </div>
-                        <div className="flex items-center gap-3">
-                            <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50">
-                                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                                Refresh
+                        <button onClick={toggleFilters} className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all duration-200 whitespace-nowrap ${showFilters ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
+                            <Filter className="h-4 w-4" />
+                            Filters
+                            {showFilters && <span className="bg-orange-500 text-white text-xs rounded-full w-2 h-2"></span>}
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                            <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'table' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`} title="Table View">
+                                <List className="h-4 w-4" />
                             </button>
-                            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
-                                <Download className="h-4 w-4" />
-                                Export CSV
+                            <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`} title="Grid View">
+                                <Grid className="h-4 w-4" />
                             </button>
                         </div>
+                        <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50" title="Refresh Data">
+                            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            <span className="hidden sm:inline">Refresh</span>
+                        </button>
+                        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium" title="Export Data">
+                            <Download className="h-4 w-4" />
+                            <span className="hidden sm:inline">Export CSV</span>
+                        </button>
+                        <Link to="/" className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <Plus className="h-4 w-4" />
+                            <span className="font-medium">Add Customer</span>
+                        </Link>
                     </div>
-                    {showFilters && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <select value={filters.country} onChange={(e) => handleFilterChange('country', e.target.value)} className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500">
+                </div>
+                {showFilters && (
+                    <div className="mt-6 p-4 bg-gray-50/80 rounded-lg border border-gray-200">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                <select value={filters.country} onChange={(e) => handleFilterChange('country', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
                                     <option value="">All Countries</option>
                                     {Object.keys(locationData).map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
-                                <select value={filters.gender} onChange={(e) => handleFilterChange('gender', e.target.value)} className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <select value={filters.gender} onChange={(e) => handleFilterChange('gender', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
                                     <option value="">All Genders</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
                                     <option value="other">Other</option>
                                 </select>
-                                <select value={filters.ageRange} onChange={(e) => handleFilterChange('ageRange', e.target.value)} className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500">
-                                    <option value="">By Age</option>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+                                <select value={filters.ageRange} onChange={(e) => handleFilterChange('ageRange', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                    <option value="">All Ages</option>
                                     <option value="0-18">0-18</option>
                                     <option value="19-35">19-35</option>
                                     <option value="36-50">36-50</option>
                                     <option value="51+">51+</option>
                                 </select>
                             </div>
+                            <div className="flex items-end">
+                                <button onClick={() => setFilters({ country: '', gender: '', ageRange: '' })} className="w-full px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200">
+                                    Clear Filters
+                                </button>
+                            </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
+            </div>
 
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden">
                 {loading ? (
                     <LoadingState />
                 ) : error ? (
@@ -203,7 +231,7 @@ const CustomerListPage = () => {
                                 onFeedbackClick={handleFeedbackClick}
                             />
                         ) : (
-                            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {customers.map(customer => (
                                     <CustomerGridCard
                                         key={customer.id}
@@ -214,7 +242,7 @@ const CustomerListPage = () => {
                                 ))}
                             </div>
                         )}
-                        <div className="bg-gray-50/80 backdrop-blur-sm border-t border-gray-200">
+                        <div className="bg-gray-50/80 border-t border-gray-200">
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
