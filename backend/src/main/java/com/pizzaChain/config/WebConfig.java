@@ -13,11 +13,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOriginPatterns(
-                        "http://localhost:*",              // allow any port for local dev
-                        "http://127.0.0.1:*",              // allow 127.0.0.1 with any port
-                        "https://pizzachainfe.netlify.app" // deployed frontend
+                        "http://localhost:*",
+                        "http://127.0.0.1:*",
+                        "https://pizzachainfe.netlify.app"
                 )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

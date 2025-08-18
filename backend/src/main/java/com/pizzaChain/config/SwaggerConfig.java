@@ -28,10 +28,10 @@ import org.springframework.context.annotation.Configuration;
                 )
         ),
         servers = {
-                @Server(url = "http://localhost:8080", description = "Local Dev Server"),
-                @Server(url = "https://pizzachain-backend.onrender.com", description = "Production Server")
+                @Server(url = "${SERVER_URL:http://localhost:8080}", description = "Default Server")
         }
 )
+
 public class SwaggerConfig {
 
     @Bean
