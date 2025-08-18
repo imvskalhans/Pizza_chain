@@ -7,9 +7,9 @@ import { PageHeader } from '../../../components/common/PageHeader';
 import { Navigation } from '../../../components/common/Navigation';
 
 const APIDocsPage = () => {
-  // This URL must point to where your backend serves the Swagger UI.
-  // Make sure your backend is running and accessible at this address.
-  const swaggerUiUrl = "http://localhost:8080/swagger-ui.html";
+  const backendBaseUrl = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  const swaggerUiUrl = `${backendBaseUrl}/swagger-ui.html`;
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
